@@ -1,11 +1,61 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
+<button id="right" style="
+    font-size: 60pt;
+    padding: 30pt;
+">Right</button>
+
+<!-- <p id="hero" style="
+    font-size: 15pt;
+    background-color: grey;
+    width: 5%;
+    padding: 10pt;
+    text-align: center;
+    position: relative;
+    top: 0;
+">Text</p> -->
+
+<div style="
+    width: 288px;
+    height: 288px;
+    overflow: hidden;
+">
+    <img 
+        id="hero-img"
+        style="
+            width: 1728px;
+            height: 1152px;
+            position: relative;
+            top: -576px;
+            left: 0px;
+            transform: scale(-1,1);
+        "
+        src="hero-sprite.png" />
+</div>
+
+
+
+<script>
+    // Переменные
+    let heroImg = window.document.querySelector('#hero-img');
+    let rightButton = window.document.querySelector('#right')
+    let rightPosition = 0;
+    // Функции
+    const rightHandler = () => {
+        rightPosition = rightPosition + 1;
+        heroImg.style.left = `${rightPosition * -288}px`
+        // hero.style.left = `${rightPosition}px`;
+    }
+    // Обработчики союытии
+    rightButton.onclick = rightHandler
+
+
+
+    // const clickHandler = () => {
+    //     if(hero.style.backgroundColor === 'grey') {
+    //         hero.style.backgroundColor = 'blue'
+    //     } else {
+    //         hero.style.backgroundColor = 'grey'
+    //     }
+    // }
     
-</body>
-</html>
+    // hero.onclick = clickHandler
+</script>
