@@ -27,23 +27,107 @@
                 width: 1728px;
                 height: 1152px;
                 position: relative;
-                top: -576px;
-                left: 0px;
+                top: 0;
+                left: -288px;
                 transform: scale(-1,1);
             "
             src="hero-sprite.png" />
+    </div>
+    <div 
+        id="jump-block"
+        style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 144px;
+            height: 144px;
+            overflow: hidden;
+            opacity: 0.5;
+        ">
+        <img src="hero-sprite.png" 
+            style="
+                position: absolute;
+                top: -144px;
+                left: -144px;
+                width: 864px;
+                height: 576px;
+                transform: scale(-1,1);
+            "
+        />
+        <div
+            style="
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 140px;
+                height: 140px;
+                border: 2px solid rgb(94, 94, 200);
+                border-radius: 50%;
+            "
+        >
+
+        </div>
+    </div>
+    <div 
+        id="hit-block"
+        style="
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 144px;
+            height: 144px;
+            overflow: hidden;
+            opacity: 0.5;
+        ">
+        <img src="hero-sprite.png" 
+            style="
+                position: absolute;
+                top: -452px;
+                left: -442px;
+                width: 864px;
+                height: 576px;
+                transform: scale(-1,1);
+            "
+        />
+        <div
+            style="
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 140px;
+                height: 140px;
+                border: 2px solid rgb(94, 94, 200);
+                border-radius: 50%;
+            "
+        >
+
+        </div>
     </div>
 </div>
 
 <script>
     // Переменные
+
+    let rightPosition = 0;
+    let imgBlockPosition = 0;
+    let direction = 'right';
+    let hit = false;
+    let jump = false;
+    let timer = null;
+    halfWidth = window.screen.width / 2
+
+    let jumpBlock = window.document.querySelector('#jump-block');
+    let hitBlock = window.document.querySelector('#hit-block');
     let heroImg = window.document.querySelector('#hero-img');
-    heroImg.onclick = (e) => {
-        e.preventDefault();
-    }
     let imgBlock = window.document.querySelector('#img-block')
     let canvas = window.document.querySelector('#canvas');
     let fsBtn = window.document.querySelector('#fsBtn');
+    jumpBlock.style.top = `${window.screen.height/2 - 144/2}px`;
+    hitBlock.style.top = `${window.screen.height/2 - 144/2}px`;
+    
+    heroImg.onclick = (e) => {
+        e.preventDefault();
+    }
     fsBtn.onclick = () => {
         if(window.document.fullscreen) {
             fsBtn.src = 'fullscreen.png'
@@ -53,8 +137,10 @@
             canvas.requestFullscreen()
         }
     }
-    let rightPosition = 0;
-    let imgBlockPosition = 0;
+
+    jumpBlock.onclick = () => {jump = true};
+    hitBlock.onclick = () => {hit = true};
+    
     // Функции
     const rightHandler = () => {
         heroImg.style.transform = "scale(-1,1)";
@@ -64,6 +150,7 @@
             rightPosition = 0;
         }
         heroImg.style.left = `${rightPosition * -288}px`;
+        heroImg.style.top = '-576px';
         imgBlock.style.left = `${imgBlockPosition * 20}px`
     }
 
@@ -75,28 +162,123 @@
             rightPosition = 0;
         }
         heroImg.style.left = `${rightPosition * -288}px`;
+        heroImg.style.top = '-576px';
         imgBlock.style.left = `${imgBlockPosition * 20}px`
+    }
+
+    const standHandler = () => {
+        switch (direction) {
+            case 'right': {
+                heroImg.style.transform = "scale(-1,1)";
+                if(rightPosition > 4) {
+                    rightPosition = 1;
+                }
+                break;
+            }
+            case 'left': {
+                heroImg.style.transform = "scale(1,1)";
+                if(rightPosition > 3) {
+                    rightPosition = 0;
+                }
+                break;
+            }
+            default: break;
+        }
+        rightPosition = rightPosition + 1;
+        heroImg.style.left = `${rightPosition * -288}px`;
+        heroImg.style.top = '0px';
+    }
+
+    const hitHandler = () => {
+        switch (direction) {
+            case 'right': {
+                heroImg.style.transform = "scale(-1,1)";
+                if(rightPosition > 4) {
+                    rightPosition = 1;
+                    hit = false;
+                }
+                break;
+            }
+            case 'left': {
+                heroImg.style.transform = "scale(1,1)";
+                if(rightPosition > 3) {
+                    rightPosition = 0;
+                    hit = false;
+                }
+                break;
+            }
+            default: break;
+        }
+        rightPosition = rightPosition + 1;
+        heroImg.style.left = `${rightPosition * -288}px`;
+        heroImg.style.top = '-864px';
+    }
+
+    const jumpHandler = () => {
+        switch (direction) {
+            case 'right': {
+                heroImg.style.transform = "scale(-1,1)";
+                if(rightPosition > 4) {
+                    rightPosition = 1;
+                    jump = false;
+                }
+                break;
+            }
+            case 'left': {
+                heroImg.style.transform = "scale(1,1)";
+                if(rightPosition > 3) {
+                    rightPosition = 0;
+                    jump = false;
+                }
+                break;
+            }
+            default: break;
+        }
+        rightPosition = rightPosition + 1;
+        heroImg.style.left = `${rightPosition * -288}px`;
+        heroImg.style.top = '-288px';
     }
     
     // Обработчики событии
 
-    let timer = null;
-    letx = 0;
-    halfWidth = window.screen.width / 2
     let onTouchStart = (event) => {
         clearInterval(timer)
         x = (event.type === 'mousedown') ? event.screenX : event.touches[0].screenX;
         timer = setInterval(() => {
-            (x > halfWidth) ? rightHandler() : leftHandler()
+            if(x > halfWidth) {
+                direction = 'right';
+                rightHandler();
+            } else {
+                direction = 'left';
+                leftHandler();
+            }
         }, 130);
     }
 
     let onTouchEnd = (event) => {
         clearInterval(timer)
+        lifeCycle()
     }
 
     window.onmousedown = onTouchStart
     window.ontouchstart = onTouchStart
     window.onmouseup = onTouchEnd;
     window.ontouchend = onTouchEnd;
+
+    const lifeCycle = () => {
+        timer = setInterval(() => {
+            if(hit) {
+                hitHandler()
+            } else if(jump) {
+                jumpHandler()
+            } else {
+                standHandler()
+            }
+        }, 150)
+    }
+
+    const start = () => {
+        lifeCycle();
+    }
+    start();
 </script>
