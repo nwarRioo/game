@@ -116,6 +116,7 @@
     </div>
     <p id="info"
         style="
+        display: none;
             position: absolute;
             left: 64px;
             top: 96px;
@@ -369,6 +370,14 @@
     }
 
 class Enemy {
+    ATTACK = 'Attack';
+    DEATH = 'Death';
+    HURT  = 'Hurt';
+    WALK = 'Walk';
+    IDLE = 'Idle';
+
+    state;
+    animateWasChanged;
     posX;
     posY;
     img;
@@ -378,17 +387,26 @@ class Enemy {
     spriteMaxPos;
     timer;
 
+    sourcePath;
+
     constructor(x, y) {
         this.posX = x;
         this.posY = y;
         this.blockSize = 96;
         this.spritePos = 0;
-        this.spriteMaxPos = 3
+        this.spriteMaxPos = 3;
+        this.sourcePath = 'assets/Enemies/1/';
+
+        this.state = this.IDLE;
+        this.animateWasChanged = false;
 
         this.createImg();
+
+        
+        this.changeAnimate(this.WALK)
         this.lifeCycle();
     }
-    createImg(){
+    createImg() {
         this.block = window.document.createElement('div');
         this.block.style.position = 'absolute';
         this.block.style.left = this.posX*32;
@@ -398,11 +416,11 @@ class Enemy {
         this.block.style.overflow = 'hidden';
 
         this.img = window.document.createElement('img');
-        this.img.src = 'assets/Enemies/1/Idle.png';
+        this.img.src = this.sourcePath + 'Idle.png';
         this.img.style.position = 'absolute';
         this.img.style.left = 0;
         this.img.style.bottom = 0;
-        this.img.style.width = this.blockSize*4;
+        
         this.img.style.height = this.blockSize;
 
         this.block.appendChild(this.img)
@@ -410,17 +428,71 @@ class Enemy {
     }
     lifeCycle() {
         this.timer = setInterval(() => {
+            if(this.animateWasChanged) {
+                this.animateWasChanged = false;
+                switch(this.state) {
+                    case this.ATTACK: {
+                        this.setAttack();
+                        break;
+                    }
+                    case this.DEATH: {
+                        this.setDeath();
+                        break;
+                    }
+                    case this.HURT: {
+                        this.setHurt();
+                        break;
+                    }
+                    case this.IDLE: {
+                        this.setIdle();
+                        break;
+                    }
+
+                    case this.WALK: {
+                        this.setWalk();
+                        break;
+                    }
+                    default: break;
+                }
+            }
+
             this.spritePos++;
             this.animate()
         }, 150)
     }
-    animate(){
+    animate() {
         if(this.spritePos > this.spriteMaxPos) {
             this.spritePos = 0;
         }
         this.img.style.left = -(this.spritePos * this.blockSize);
     }
+    setAttack() {
+        this.img.src = this.sourcePath + 'Attack.png';
+        this.spriteMaxPos = 5;
+    }
+    setDeath() {
+        this.img.src = this.sourcePath + 'Death.png';
+        this.spriteMaxPos = 5;
+    }
+    setHurt() {
+        this.img.src = this.sourcePath + 'Hurt.png';
+        this.spriteMaxPos = 1;
+    }
+    setIdle() {
+        this.img.src = this.sourcePath + 'Idle.png';
+        this.spriteMaxPos = 3;
+    }
+    setWalk() {
+        this.img.src = this.sourcePath + 'Walk.png';
+        this.spriteMaxPos = 5;
+    }
+
+    changeAnimate(stateStr) {
+        this.state = stateStr;
+        this.animateWasChanged = true;
+    }
 }
+
 
     const start = () => {
         lifeCycle();
