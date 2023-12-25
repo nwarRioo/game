@@ -166,7 +166,7 @@
     hitBlock.style.top = `${window.screen.height/2 - 144/2}px`;
     
     heroImg.onclick = (e) => {
-        e.preventDefault();
+        e.stopPropagation();
     }
     fsBtn.onclick = () => {
         if(window.document.fullscreen) {
@@ -178,8 +178,21 @@
         }
     }
 
-    jumpBlock.onclick = () => {jump = true};
-    hitBlock.onclick = () => {hit = true};
+    jumpBlock.onclick = (e) => {
+        jump = true
+    };
+    hitBlock.onclick = (e) => {
+        hit = true
+    };
+    
+
+    hitBlock.addEventListener('mousedown', function(e) {
+        e.stopPropagation();
+    });
+
+    jumpBlock.addEventListener('mousedown', function(e) {
+        e.stopPropagation();
+    });
     
     // Функции
 
@@ -757,8 +770,19 @@ class Enemy5 extends Enemy {
 }
 
 class Enemy6 extends Enemy {
+    bullet;
+    isShoot;
+    bulletX;
     constructor(x, y) {
         super(x, y, 'assets/Enemies/6/');
+        this.bullet = window.document.createElement('img');
+        this.bullet.src = this.sourcePath + 'Ball1.png';
+        this.bullet.style.position = 'absolute';
+        this.bullet.style.left = this.block.style.left;
+        this.bullet.style.bottom = Number.parseInt(this.block.style.bottom) + 32;
+        this.bullet.style.transform = 'scale(2, 2)';
+        this.bullet.style.display = 'none';
+        canvas.appendChild(this.bullet);
     }
     setAttack() {
         this.img.src = this.sourcePath + 'Attack.png';
@@ -771,6 +795,89 @@ class Enemy6 extends Enemy {
     setWalk() {
         this.img.src = this.sourcePath + 'Walk.png';
         this.spriteMaxPos = 3;
+    }
+
+    checkCollide() {
+        if(heroY == this.posY) {
+            this.stop = true;
+            if(heroX > this.posX) {
+                this.dir = 1;
+                this.img.style.transform = 'scale(1,1)';
+            } else {
+                this.dir = -1;
+                this.img.style.transform = 'scale(-1,1)';
+            }
+            if(heroX == this.posX) {
+                this.checkHurt();
+                isRightSideBlocked = true;
+                // this.stop = true;
+            } else if(heroX == (this.posX + 3)) {
+                this.checkHurt();
+                isLeftSideBlocked = true;
+                // this.stop = true;
+            } else {
+                isRightSideBlocked = false;
+                isLeftSideBlocked = false;
+                // this.stop = false;
+                this.changeAnimate(this.WALK);
+            }
+        } else {
+            isRightSideBlocked = false;
+            isLeftSideBlocked = false;
+            this.stop = false;
+            this.changeAnimate(this.WALK);
+        }
+    }
+
+    animate() {
+        if(this.spritePos > this.spriteMaxPos) {
+            this.spritePos = 0;
+            if(this.state === this.ATTACK) {
+                if(!this.isShoot) this.shoot();
+            }
+            if(this.state === this.HURT) {
+                this.changeAnimate(this.ATTACK);
+                if(this.dir > 0) this.spritePos = 1; 
+            } 
+            if(this.state === this.DEATH) {
+                clearInterval(this.timer);
+                isRightSideBlocked = false;
+                isLeftSideBlocked = falseж
+                if(this.dir > 0) this.spritePos = 5;
+            } 
+        }
+        if(this.isShoot && this.state === this.ATTACK) {
+            this.bulletFunc();
+        } else {
+            this.bullet.style.display = 'none';
+        }
+        this.img.style.left = -(this.spritePos * this.blockSize);
+    }
+    shoot() {
+        this.isShoot = true;
+        this.bullet.style.display = 'block';
+        this.dir > 0 ? this.bulletX = this.posX + 2 : this.bulletX = this.posX + 1;
+    }
+    bulletFunc() {
+        (this.dir > 0) ? this.bulletX +=1 : this.bulletX -=1;
+        this.bullet.style.left = this.bulletX * 32;
+        if(this.bulletX === heroX && this.posY === heroY) {
+            this.isShoot = false;
+            this.bullet.style.display = 'none';
+            lives--;
+            updateHearts();
+        }
+        if(this.dir > 0) {
+            if(this.bulletX > (this.posX + 6)) {
+                this.isShoot = false;
+                this.bullet.style.display = 'none';
+            }
+        } else {
+            if(this.bulletX < (this.posX - 5)) {
+                this.isShoot = false;
+                this.bullet.style.display = 'none';
+            }
+        }
     }
 }
 
@@ -934,7 +1041,6 @@ const buildLevel = () => {
         lifeCycle();
         addHearts();
         updateHearts();
-        let enemy10 = new Enemy2(5,1);
     }
     start();
 </script>
