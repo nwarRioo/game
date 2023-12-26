@@ -157,8 +157,8 @@
     let tileArray = [];
     let objectsArray = [];
     let enemiesArray = [];
-    let maxLives = 6;
-    let lives = 6;
+    let maxLives = 8;
+    let lives = 8;
     let heartsArray = [];
     let isRightSideBlocked = false;
     let isLeftSideBlocked = false;
@@ -201,12 +201,13 @@
     restartBtn.addEventListener('click', (e) => {
         window.document.location.reload();
     })
-    jumpBlock.onclick = (e) => {
+    jumpBlock.onclick = () => {
         jump = true
     };
-    hitBlock.onclick = (e) => {
+    hitBlock.onclick = () => {
         hit = true
     };
+    
     hitBlock.addEventListener('mousedown', (e) => {
         e.stopPropagation();
     });
@@ -313,38 +314,46 @@
         }
     }
     const rightHandler = () => {
-        if(!isRightSideBlocked && !isWallRight){
-            heroImg.style.transform = "scale(-1,1)";
-            rightPosition = rightPosition + 1;
-            imgBlockPosition = imgBlockPosition + 1;
-            if(rightPosition > 5) {
-                rightPosition = 0;
+        if(!fall) {
+            if(!isRightSideBlocked && !isWallRight){
+                heroImg.style.transform = "scale(-1,1)";
+                rightPosition = rightPosition + 1;
+                imgBlockPosition = imgBlockPosition + 1;
+                if(rightPosition > 5) {
+                    rightPosition = 0;
+                }
+                heroImg.style.left = `-${rightPosition * 96}px`;
+                heroImg.style.top = '-192px';
+                imgBlock.style.left = `${imgBlockPosition * heroStep}px`;
+            
+                checkFalling();
+                wasHeroHit = false;
+                moveWorldLeft();
+                checkRightWallCollide();
             }
-            heroImg.style.left = `-${rightPosition * 96}px`;
-            heroImg.style.top = '-192px';
-            imgBlock.style.left = `${imgBlockPosition * heroStep}px`;
-        
-            checkFalling();
-            wasHeroHit = false;
-            moveWorldLeft();
-            checkRightWallCollide();
+        } else {
+            fallHandler();
         }
     }
     const leftHandler = () => {
-        if(!isLeftSideBlocked && !isWallLeft) {
-            heroImg.style.transform = "scale(1,1)";
-            rightPosition = rightPosition + 1;
-            imgBlockPosition = imgBlockPosition - 1
-            if(rightPosition > 5) {
-                rightPosition = 0;
+        if(!fall) {
+            if(!isLeftSideBlocked && !isWallLeft) {
+                heroImg.style.transform = "scale(1,1)";
+                rightPosition = rightPosition + 1;
+                imgBlockPosition = imgBlockPosition - 1
+                if(rightPosition > 5) {
+                    rightPosition = 0;
+                }
+                heroImg.style.left = `-${rightPosition * 96}px`;
+                heroImg.style.top = '-192px';
+                imgBlock.style.left = `${imgBlockPosition * heroStep}px`
+                checkFalling();
+                wasHeroHit = false;
+                moveWorldRight();
+                checkLeftWallCollide();
             }
-            heroImg.style.left = `-${rightPosition * 96}px`;
-            heroImg.style.top = '-192px';
-            imgBlock.style.left = `${imgBlockPosition * heroStep}px`
-            checkFalling();
-            wasHeroHit = false;
-            moveWorldRight();
-            checkLeftWallCollide();
+        } else {
+            fallHandler();
         }
     }
     const standHandler = () => {
@@ -454,6 +463,25 @@
     window.ontouchstart = onTouchStart
     window.onmouseup = onTouchEnd;
     window.ontouchend = onTouchEnd;
+    window.addEventListener('keydown', (e) => {
+        if(!e.repeat){
+            clearInterval(timer)
+            timer = setInterval(() => {
+            if(e.code === 'KeyD') {
+                direction = 'right';
+                rightHandler();
+            } else if (e.code === 'KeyA') {
+                direction = 'left';
+                leftHandler();
+            }
+        }, 130);}
+    })
+    window.addEventListener('keyup', (e) => {
+        if(e.code === 'KeyW') jump = true
+        if(e.code === 'KeyE') hit = true
+        clearInterval(timer)
+        lifeCycle()
+    })
 
     const lifeCycle = () => {
         timer = setInterval(() => {
@@ -528,7 +556,7 @@ class Lever {
         canvas.appendChild(this.leverImg);
         enemiesArray.push(this);
 
-        this.time = 15;
+        this.time = 30;
         this.dir = true;
         this.opacity = 1;
         this.updateTimer = setInterval(() => {
@@ -856,7 +884,7 @@ class Enemy {
         if(this.spritePos > this.spriteMaxPos) {
             this.spritePos = 0;
             if(this.state === this.ATTACK) {
-                lives--;
+                lives -= 0.5;
                 updateHearts();
             }
             if(this.state === this.HURT) {
@@ -1121,7 +1149,7 @@ class Enemy6 extends Enemy {
         if(this.bulletX === heroX && this.posY === heroY) {
             this.isShoot = false;
             this.bullet.style.display = 'none';
-            lives--;
+            lives -= 0.5;
             updateHearts();
         }
         if(this.dir > 0) {
@@ -1173,7 +1201,10 @@ const addHearts = () => {
     }
 }
 const updateHearts = () => {
-    if(lives < 1) lives = 1;
+    if(lives <= 0) {
+        finalTimerText.innerText = 'Game over';
+        imgBlock.style.display = 'none';
+    }
     for(let i = 0; i < lives; i++) {
         heartsArray[i].img.style.display = 'block';
     }
@@ -1262,7 +1293,7 @@ const buildLevel = () => {
     createTilesPlatform(0, 14, floor1);
     createTilesPlatform(3, 41, floor1);
     createTilesPlatform(76, 91, floor1);
-    createTilesPlatform(106, 132, floor1);
+    createTilesPlatform(106, 142, floor1);
 
     createTilesPlatform(15, 32, floor2);
     createTilesPlatform(42, 53, floor2);
@@ -1310,7 +1341,7 @@ const addStartScreen = () => {
         let cutscene = new Cutscene([
             'После неудачной попытки выследить похитетелей своей девушки, Адам был пойман недображелателями.\n\nОни решили протестировать на герое недавно украденную сверхсекретную разработку. В результате - сознание Адама было заключено в виртуальный плен. \n\nВсе это время друзья героя искали его и спустя несколько дней, наконец-то смогли выйти с ним на связь.',
             'Оказалось, что из виртуального мира можно сбежать - дверь находиться за одним из фонтанов в конце первого уровня. Но, чтобы ее открыть нужно найти спрятанный рычаг и ввести код пароля.\n\nПароль состоит из 4 чисел. Цифры пароля находятся внутри тщательно охраняемых деревянных ящиков (по одной в каждом).\n\nЧто касается рычага - он спрятан на втором уровне, куда у Адама нет доступа.',
-            'К счастью друзья нашли способ похитить его. Но, поскольку опасность слышком велика, они передадут рычаг, только когда станут известны все цифры пароля.\n\nКогда появится рычаг у Адама будет 15 секунд чтобы найти его, подбежать к фонтану и ввести пароль. Если герой не успеет - местонохождение его друзей будет обнаружено недоброжелателями.',
+            'К счастью друзья нашли способ похитить его. Но, поскольку опасность слышком велика, они передадут рычаг, только когда станут известны все цифры пароля.\n\nКогда появится рычаг у Адама будет 30 секунд чтобы найти его, подбежать к фонтану и ввести пароль. Если герой не успеет - местонохождение его друзей будет обнаружено недоброжелателями.',
         ])
     })
     div.appendChild(btn);
